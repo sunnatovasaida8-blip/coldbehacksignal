@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COLDBEHACK MAX V4.2</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+        body {
+            background-color: #060b14;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+        /* Canvas qor va chaqmoq uchun */
+        #weather-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
+        .close-btn, .menu-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .title-badge {
+            background: rgba(0, 229, 255, 0.1);
+            border: 1px solid #00e5ff;
+            color: #00e5ff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .main-title {
+            font-size: 26px;
+            font-weight: 900;
+            color: #00ffff;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            font-size: 11px;
+            color: #8b9bb4;
+            text-align: center;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .card {
+            background: rgba(13, 22, 38, 0.85);
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            border-radius: 20px;
+            width: 100%;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            margin-bottom: 15px;
+        }
+        .promo-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(20, 32, 54, 0.9);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 12px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+        }
+        .promo-info span {
+            font-size: 10px;
+            color: #a0aec0;
+            display: block;
+        }
+        .promo-info strong {
+            font-size: 16px;
+            color: #ffc107;
+            letter-spacing: 1px;
+        }
+        .copy-btn {
+            background: rgba(255, 193, 7, 0.15);
+            border: 1px solid #ffc107;
+            color: #ffc107;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .copy-btn:active {
+            background: #ffc107;
+            color: #000;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            font-size: 11px;
+            color: #a0aec0;
+            display: block;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .input-field {
+            width: 100%;
+            background: rgba(10, 17, 30, 0.9);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 12px;
+            padding: 14px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s;
+        }
+        .input-field:focus {
+            border-color: #00e5ff;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+        }
+        .platform-select {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .platform-btn {
+            flex: 1;
+            background: rgba(10, 17, 30, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .platform-btn.active {
+            border-color: #00e5ff;
+            background: rgba(0, 229, 255, 0.15);
+            color: #00e5ff;
+            box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+        }
+        .action-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            border: none;
+            border-radius: 14px;
+            padding: 15px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0, 114, 255, 0.4);
+            transition: 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+        .error-msg {
+            color: #ff4d4d;
+            font-size: 11px;
+            margin-top: 5px;
+            display: none;
+        }
+        .footer-text {
+            font-size: 10px;
+            color: #556677;
+            text-align: center;
+            margin-top: 20px;
+            letter-spacing: 1px;
+        }
+        /* Asosiy panel (Dashboard) */
+        #dashboard-view, #game-view {
+            display: none;
+            width: 100%;
+        }
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .game-card {
+            background: rgba(13, 22, 38, 0.9);
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            border-radius: 14px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .game-card:hover {
+            border-color: #00e5ff;
+            transform: translateY(-2px);
+        }
+        .game-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .game-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff;
+        }
+        .social-links {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .social-btn {
+            flex: 1;
+            background: rgba(0, 229, 255, 0.1);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            color: #00e5ff;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        /* O'yin oynasi ichi */
+        .game-container-box {
+            background: rgba(13, 22, 38, 0.95);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+        .signal-screen {
+            background: rgba(5, 10, 20, 0.9);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px dashed rgba(0, 229, 255, 0.4);
+        }
+        .back-btn {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-bottom: 15px;
+            float: left;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="weather-canvas"></canvas>
+
+    <div class="container">
+        <!-- KIRISH SAHifasi -->
+        <div id="login-view" style="width: 100%;">
+            <div class="header-top">
+                <button class="close-btn">✕</button>
+                <div class="title-badge">V4.2 OFFICIAL HACK</div>
+                <button class="menu-btn">⋮</button>
+            </div>
+
+            <div class="main-title">COLDBEHACK MAX</div>
+            <div class="subtitle">POWERED BY THEEAGLE</div>
+
+            <div class="card">
+                <div class="promo-box">
+                    <div class="promo-info">
+                        <span>PROMOKOD</span>
+                        <strong id="promo-code-text">MUZZ</strong>
+                    </div>
+                    <button class="copy-btn" onclick="copyPromo()">Nusxalash</button>
+                </div>
+
+                <div class="input-group">
+                    <label>ID Raqamingizni Kiriting</label>
+                    <input type="number" id="user-id" class="input-field" placeholder="Masalan: 48291039">
+                    <div id="id-error" class="error-msg">❌ Hisob (ID) raqami noto'g'ri!</div>
+                </div>
+
+                <div class="input-group">
+                    <label>Faollashtirish Kaliti (Key)</label>
+                    <input type="text" id="user-key" class="input-field" placeholder="KALITNI KIRITING...">
+                    <div id="key-error" class="error-msg">❌ Kiritilgan kalit noto'g'ri!</div>
+                </div>
+
+                <div class="input-group">
+                    <label>Platformani Tanlang</label>
+                    <div class="platform-select">
+                        <div class="platform-btn active" id="btn-coldbet" onclick="selectPlatform('coldbet')">COLDBET</div>
+                        <div class="platform-btn" id="btn-linebet" onclick="selectPlatform('linebet')">LINEBET</div>
+                    </div>
+                </div>
+
+                <button class="action-btn" onclick="handleLogin()">🛡️ Xavfsiz Kirish</button>
+            </div>
+            
+            <div class="footer-text">© 2026 COLDBEHACK V4, All rights reserved.</div>
+        </div>
+
+        <!-- ASOSIY O'YINLAR MENUSI -->
+        <div id="dashboard-view">
+            <div class="header-top">
+                <div class="title-badge" id="active-platform-badge">COLDBET</div>
+                <div class="title-badge" style="background: rgba(0,255,0,0.1); border-color: #00ff00; color: #00ff00;">● Online</div>
+            </div>
+            
+            <div class="main-title" style="font-size: 20px; margin-bottom: 15px;">SIGNAL MENusi</div>
+
+            <div class="games-grid">
+                <div class="game-card" onclick="openGame('Apple of Fortune')">
+                    <div class="game-icon">🍎</div>
+                    <div class="game-name">Apple of Fortune</div>
+                </div>
+                <div class="game-card" onclick="openGame('Thimbles')">
+                    <div class="game-icon">🪙</div>
+                    <div class="game-name">Thimbles</div>
+                </div>
+                <div class="game-card" onclick="openGame('Mines')">
+                    <div class="game-icon">💣</div>
+                    <div class="game-name">Mines</div>
+                </div>
+                <div class="game-card" onclick="openGame('Wild West Gold')">
+                    <div class="game-icon">🤠</div>
+                    <div class="game-name">Wild West Gold</div>
+                </div>
+                <div class="game-card" onclick="openGame('Kamikaze')">
+                    <div class="game-icon">✈️</div>
+                    <div class="game-name">Kamikaze</div>
+                </div>
+                <div class="game-card" onclick="openGame('Swamp Land')">
+                    <div class="game-icon">🐸</div>
+                    <div class="game-name">Swamp Land</div>
+                </div>
+            </div>
+
+            <div class="card" style="padding: 12px; margin-bottom: 12px; text-align: center;">
+                <div style="font-size: 13px; font-weight: bold; color: #00e5ff; margin-bottom: 5px;">AVIATOR Predictor</div>
+                <button class="action-btn" style="padding: 10px; font-size: 13px;" onclick="openGame('Aviator')">⚡ Signal Olish</button>
+            </div>
+
+            <div class="social-links">
+                <a href="https://t.me/MUZZCOLD" target="_blank" class="social-btn">📢 Telegram Kanal</a>
+                <a href="https://t.me/ZYNEX2_x27" target="_blank" class="social-btn">💬 Admin Support</a>
+            </div>
+            <div class="footer-text">POWERED BY THEEAGLE</div>
+        </div>
+
+        <!-- O'YIN ICHIDAGI SIGNAL OYNASI -->
+        <div id="game-view">
+            <button class="back-btn" onclick="goBackToDashboard()">← Orqaga</button>
+            <div class="game-container-box">
+                <h3 id="current-game-title" style="color: #00e5ff; margin-bottom: 10px;">O'yin</h3>
+                <div class="signal-screen" id="signal-display-area">
+                    <span style="color: #8b9bb4; font-size: 13px;">START tugmasini bosing va signal oling</span>
+                </div>
+                <button class="action-btn" onclick="generateSignal()">START / SIGNAL OLISH</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPlatform = 'coldbet';
+
+        function selectPlatform(platform) {
+            currentPlatform = platform;
+            const promoText = document.getElementById('promo-code-text');
+            const btnCold = document.getElementById('btn-coldbet');
+            const btnLine = document.getElementById('btn-linebet');
+
+            if (platform === 'coldbet') {
+                promoText.innerText = 'MUZZ';
+                btnCold.classList.add('active');
+                btnLine.classList.remove('active');
+            } else {
+                promoText.innerText = 'BE127';
+                btnLine.classList.add('active');
+                btnCold.classList.remove('active');
+            }
+        }
+
+        function copyPromo() {
+            const promo = document.getElementById('promo-code-text').innerText;
+            navigator.clipboard.writeText(promo);
+            alert('Promokod nusxalandir: ' + promo);
+        }
+
+        function handleLogin() {
+            const idVal = document.getElementById('user-id').value.trim();
+            const keyVal = document.getElementById('user-key').value.trim();
+            const idErr = document.getElementById('id-error');
+            const keyErr = document.getElementById('key-error');
+
+            let hasError = false;
+
+            if (!idVal || idVal.length < 5) {
+                idErr.style.display = 'block';
+                hasError = true;
+            } else {
+                idErr.style.display = 'none';
+            }
+
+            const expectedKey = currentPlatform === 'coldbet' ? 'MUZZ' : 'BE127';
+            if (keyVal !== expectedKey) {
+                keyErr.innerText = `❌ Kalit xato! (${currentPlatform === 'coldbet' ? 'Coldbet: MUZZ' : 'Linebet: BE127'})`;
+                keyErr.style.display = 'block';
+                hasError = true;
+            } else {
+                keyErr.style.display = 'none';
+            }
+
+            if (!hasError) {
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('dashboard-view').style.display = 'block';
+                document.getElementById('active-platform-badge').innerText = currentPlatform.toUpperCase();
+            }
+        }
+
+        let selectedGameName = '';
+        function openGame(gameName) {
+            selectedGameName = gameName;
+            document.getElementById('dashboard-view').style.display = 'none';
+            document.getElementById('game-view').style.display = 'block';
+            document.getElementById('current-game-title').innerText = gameName.toUpperCase();
+            document.getElementById('signal-display-area').innerHTML = '<span style="color: #8b9bb4; font-size: 13px;">Tayyor... START bosing</span>';
+        }
+
+        function goBackToDashboard() {
+            document.getElementById('game-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'block';
+        }
+
+        function generateSignal() {
+            const area = document.getElementById('signal-display-area');
+            area.innerHTML = '<span style="color: #00e5ff; font-weight: bold; animation: pulse 1s infinite;">Analiz qilinmoqda... 🔄</span>';
+            
+            setTimeout(() => {
+                if (selectedGameName === 'Apple of Fortune') {
+                    area.innerHTML = '<div style="font-size:14px; color:#00ff00; font-weight:bold;">✅ Tavsiya etilgan qadamlar:<br>1.x1.23 | 2.x1.54 | 3.x1.93<br>4.x2.41 | 5.x4.02 | 6.x6.71</div>';
+                } else if (selectedGameName === 'Mines') {
+                    area.innerHTML = '<div style="font-size:16px; color:#ffc107; font-weight:bold;">💣 Ochiq kataklar:<br>[2], [7], [12], [18], [21]</div>';
+                } else if (selectedGameName === 'Thimbles') {
+                    area.innerHTML = '<div style="font-size:16px; color:#00e5ff; font-weight:bold;">🪙 G‘olib stakan: <span style="font-size:24px; color:#fff;">2-stakan</span></div>';
+                } else {
+                    area.innerHTML = '<div style="font-size:16px; color:#00ff00; font-weight:bold;">🚀 Signal koeffitsiyenti: <span style="font-size:22px;">x2.85</span></div>';
+                }
+            }, 1000);
+        }
+
+        // Qor va Chaqmoq Animatsiyasi uchun Canvas
+        const canvas = document.getElementById('weather-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const snowflakes = [];
+        for (let i = 0; i < 100; i++) {
+            snowflakes.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 3 + 1,
+                speedY: Math.random() * 2 + 1,
+                speedX: Math.random() * 2 - 1
+            });
+        }
+
+        let lightningTimer = 0;
+        let isLightning = false;
+
+        function animateWeather() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Kuchli chaqmoq effekti
+            lightningTimer++;
+            if (lightningTimer > Math.random() * 150 + 80) {
+                isLightning = true;
+                setTimeout(() => { isLightning = false; }, 120);
+                lightningTimer = 0;
+            }
+
+            if (isLightning) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // Qor parchalari
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.beginPath();
+            for (let flake of snowflakes) {
+                ctx.moveTo(flake.x, flake.y);
+                ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2, true);
+                
+                flake.y += flake.speedY;
+                flake.x += flake.speedX;
+
+                if (flake.y > canvas.height) {
+                    flake.y = 0;
+                    flake.x = Math.random() * canvas.width;
+                }
+            }
+            ctx.fill();
+            requestAnimationFrame(animateWeather);
+        }
+
+        animateWeather();
+    </script>
+</body>
+</html>
